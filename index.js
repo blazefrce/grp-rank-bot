@@ -43,7 +43,7 @@ app.get("/members", async (req, res) => {
 });
 
 /*
-	Test API Key
+	List roles
 */
 app.get("/testrank", async (req, res) => {
 
@@ -74,6 +74,7 @@ app.get("/testrank", async (req, res) => {
 
 /*
 	Find membership by UserId
+
 	Example:
 	/find/11028647983
 */
@@ -122,7 +123,53 @@ app.get("/find/:userid", async (req, res) => {
 });
 
 /*
-	Placeholder rank endpoint
+	TEST ASSIGN ROLE
+
+	Member:
+	users/11028647983
+
+	Membership:
+	MTEwMjg2NDc5ODM
+
+	Role:
+	Bhayangkara Dua
+	731113037
+*/
+app.get("/testassign", async (req, res) => {
+
+	try {
+
+		const membershipId = "MTEwMjg2NDc5ODM";
+
+		const response = await axios.post(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships/${membershipId}:assignRole`,
+			{
+				role: `groups/${GROUP_ID}/roles/731113037`
+			},
+			{
+				headers: {
+					"x-api-key": API_KEY,
+					"Content-Type": "application/json"
+				}
+			}
+		);
+
+		res.json(response.data);
+
+	} catch(err) {
+
+		console.error(err.response?.data || err);
+
+		res.status(500).json(
+			err.response?.data || err.toString()
+		);
+
+	}
+
+});
+
+/*
+	Future Roblox endpoint
 */
 app.post("/rank", async (req, res) => {
 
