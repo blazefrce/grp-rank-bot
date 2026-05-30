@@ -12,6 +12,35 @@ app.get("/", (req, res) => {
 	res.send("GRP Rank API Online");
 });
 
+app.get("/testrank", async (req, res) => {
+
+	try {
+
+		const response = await axios.patch(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/users/1`,
+			{
+				roleId: 731113037
+			},
+			{
+				headers: {
+					"x-api-key": API_KEY,
+					"Content-Type": "application/json"
+				}
+			}
+		);
+
+		res.json(response.data);
+
+	} catch(err) {
+
+		res.status(500).json(
+			err.response?.data || err.toString()
+		);
+
+	}
+
+});
+
 app.post("/rank", async (req, res) => {
 
 	try {
