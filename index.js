@@ -13,14 +13,14 @@ app.get("/", (req, res) => {
 });
 
 /*
-	List memberships
+	LIST MEMBERS
 */
 app.get("/members", async (req, res) => {
 
 	try {
 
 		const response = await axios.get(
-			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=20`,
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`,
 			{
 				headers: {
 					"x-api-key": API_KEY
@@ -43,7 +43,7 @@ app.get("/members", async (req, res) => {
 });
 
 /*
-	List roles
+	LIST ROLES
 */
 app.get("/testrank", async (req, res) => {
 
@@ -73,10 +73,7 @@ app.get("/testrank", async (req, res) => {
 });
 
 /*
-	Find membership by UserId
-
-	Example:
-	/find/11028647983
+	FIND MEMBER
 */
 app.get("/find/:userid", async (req, res) => {
 
@@ -84,26 +81,53 @@ app.get("/find/:userid", async (req, res) => {
 
 		const userId = String(req.params.userid);
 
-		const response = await axios.get(
-			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`,
-			{
-				headers: {
-					"x-api-key": API_KEY
+		let nextPageToken = "";
+		let member = null;
+
+		while (!member) {
+
+			const url =
+				`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`
+				+ (
+					nextPageToken
+						? `&pageToken=${encodeURIComponent(nextPageToken)}`
+						: ""
+				);
+
+			const response = await axios.get(
+				url,
+				{
+					headers: {
+						"x-api-key": API_KEY
+					}
 				}
+			);
+
+			const memberships =
+				response.data.groupMemberships || [];
+
+			member = memberships.find(m =>
+				m.user === `users/${userId}`
+			);
+
+			if (member) {
+				break;
 			}
-		);
 
-		const memberships = response.data.groupMemberships || [];
+			nextPageToken =
+				response.data.nextPageToken;
 
-		const member = memberships.find(m =>
-			m.user === `users/${userId}`
-		);
+			if (!nextPageToken) {
+				break;
+			}
+
+		}
 
 		if (!member) {
 
 			return res.status(404).json({
 				success: false,
-				message: "Member not found"
+				error: "Member not found"
 			});
 
 		}
@@ -123,7 +147,7 @@ app.get("/find/:userid", async (req, res) => {
 });
 
 /*
-	TEST ASSIGN ROLE
+	TEST ASSIGN
 */
 app.get("/testassign", async (req, res) => {
 
@@ -159,7 +183,7 @@ app.get("/testassign", async (req, res) => {
 });
 
 /*
-	AUTO RANK ENDPOINT
+	AUTO RANK
 */
 app.post("/rank", async (req, res) => {
 
@@ -168,21 +192,47 @@ app.post("/rank", async (req, res) => {
 		const userId = String(req.body.userId);
 		const roleId = String(req.body.roleId);
 
-		// Cari membership pemain
-		const membershipResponse = await axios.get(
-			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`,
-			{
-				headers: {
-					"x-api-key": API_KEY
+		let nextPageToken = "";
+		let member = null;
+
+		while (!member) {
+
+			const url =
+				`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`
+				+ (
+					nextPageToken
+						? `&pageToken=${encodeURIComponent(nextPageToken)}`
+						: ""
+				);
+
+			const response = await axios.get(
+				url,
+				{
+					headers: {
+						"x-api-key": API_KEY
+					}
 				}
+			);
+
+			const memberships =
+				response.data.groupMemberships || [];
+
+			member = memberships.find(m =>
+				m.user === `users/${userId}`
+			);
+
+			if (member) {
+				break;
 			}
-		);
 
-		const memberships = membershipResponse.data.groupMemberships || [];
+			nextPageToken =
+				response.data.nextPageToken;
 
-		const member = memberships.find(m =>
-			m.user === `users/${userId}`
-		);
+			if (!nextPageToken) {
+				break;
+			}
+
+		}
 
 		if (!member) {
 
@@ -193,9 +243,9 @@ app.post("/rank", async (req, res) => {
 
 		}
 
-		const membershipId = member.path.split("/").pop();
+		const membershipId =
+			member.path.split("/").pop();
 
-		// Assign role baru
 		const assignResponse = await axios.post(
 			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships/${membershipId}:assignRole`,
 			{
@@ -213,6 +263,7 @@ app.post("/rank", async (req, res) => {
 			success: true,
 			userId,
 			roleId,
+			membershipId,
 			data: assignResponse.data
 		});
 
