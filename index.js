@@ -30,7 +30,7 @@ app.get("/members", async (req, res) => {
 
 		res.json(response.data);
 
-	} catch(err) {
+	} catch (err) {
 
 		console.error(err.response?.data || err);
 
@@ -60,7 +60,7 @@ app.get("/testrank", async (req, res) => {
 
 		res.json(response.data);
 
-	} catch(err) {
+	} catch (err) {
 
 		console.error(err.response?.data || err);
 
@@ -110,7 +110,7 @@ app.get("/find/:userid", async (req, res) => {
 
 		res.json(member);
 
-	} catch(err) {
+	} catch (err) {
 
 		console.error(err.response?.data || err);
 
@@ -124,16 +124,6 @@ app.get("/find/:userid", async (req, res) => {
 
 /*
 	TEST ASSIGN ROLE
-
-	Member:
-	users/11028647983
-
-	Membership:
-	MTEwMjg2NDc5ODM
-
-	Role:
-	Bhayangkara Dua
-	731113037
 */
 app.get("/testassign", async (req, res) => {
 
@@ -156,7 +146,7 @@ app.get("/testassign", async (req, res) => {
 
 		res.json(response.data);
 
-	} catch(err) {
+	} catch (err) {
 
 		console.error(err.response?.data || err);
 
@@ -169,29 +159,70 @@ app.get("/testassign", async (req, res) => {
 });
 
 /*
-	Future Roblox endpoint
+	AUTO RANK ENDPOINT
 */
 app.post("/rank", async (req, res) => {
 
 	try {
 
-		const userId = req.body.userId;
-		const roleId = req.body.roleId;
+		const userId = String(req.body.userId);
+		const roleId = String(req.body.roleId);
+
+		// Cari membership pemain
+		const membershipResponse = await axios.get(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`,
+			{
+				headers: {
+					"x-api-key": API_KEY
+				}
+			}
+		);
+
+		const memberships = membershipResponse.data.groupMemberships || [];
+
+		const member = memberships.find(m =>
+			m.user === `users/${userId}`
+		);
+
+		if (!member) {
+
+			return res.status(404).json({
+				success: false,
+				error: "Member not found in group"
+			});
+
+		}
+
+		const membershipId = member.path.split("/").pop();
+
+		// Assign role baru
+		const assignResponse = await axios.post(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships/${membershipId}:assignRole`,
+			{
+				role: `groups/${GROUP_ID}/roles/${roleId}`
+			},
+			{
+				headers: {
+					"x-api-key": API_KEY,
+					"Content-Type": "application/json"
+				}
+			}
+		);
 
 		res.json({
 			success: true,
-			message: "Rank endpoint active",
 			userId,
-			roleId
+			roleId,
+			data: assignResponse.data
 		});
 
-	} catch(err) {
+	} catch (err) {
 
-		console.error(err);
+		console.error(err.response?.data || err);
 
 		res.status(500).json({
 			success: false,
-			error: err.toString()
+			error: err.response?.data || err.toString()
 		});
 
 	}
