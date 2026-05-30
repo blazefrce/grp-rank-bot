@@ -1,36 +1,57 @@
-const noblox = require("noblox.js");
+const express = require("express");
+const axios = require("axios");
 
-async function test() {
-    try {
+const app = express();
 
-        console.log("COOKIE EXISTS:", !!process.env.COOKIE);
-        console.log("COOKIE LENGTH:", process.env.COOKIE ? process.env.COOKIE.length : 0);
+app.use(express.json());
 
-        if (process.env.COOKIE) {
-            console.log(
-                "COOKIE START:",
-                process.env.COOKIE.substring(0, 50)
-            );
-        }
+const API_KEY = process.env.API_KEY;
+const GROUP_ID = process.env.GROUP_ID;
 
-        console.log("Trying login...");
+app.get("/", (req, res) => {
+	res.send("GRP Rank API Online");
+});
 
-        await noblox.setCookie(process.env.COOKIE);
+app.post("/rank", async (req, res) => {
 
-        console.log("Cookie accepted");
+	try {
 
-        const user = await noblox.getCurrentUser();
+		const userId = req.body.userId;
+		const roleId = req.body.roleId;
 
-        console.log("SUCCESS");
-        console.log("USERNAME:", user.UserName);
-        console.log("USERID:", user.UserID);
+		const response = await axios.patch(
+			`https://groups.roblox.com/v1/groups/${GROUP_ID}/users/${userId}`,
+			{
+				roleId: roleId
+			},
+			{
+				headers: {
+					"x-api-key": API_KEY,
+					"Content-Type": "application/json"
+				}
+			}
+		);
 
-    } catch (err) {
+		res.json({
+			success: true,
+			data: response.data
+		});
 
-        console.error("FAILED");
-        console.error(err);
+	} catch(err) {
 
-    }
-}
+		console.error(err.response?.data || err);
 
-test();
+		res.status(500).json({
+			success: false,
+			error: err.response?.data || err.toString()
+		});
+
+	}
+
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+	console.log("Running on port", PORT);
+});
