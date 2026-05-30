@@ -12,19 +12,19 @@ app.get("/", (req, res) => {
 	res.send("GRP Rank API Online");
 });
 
-app.get("/testrank", async (req, res) => {
+/*
+	TEST MEMBERS
+	https://domain-railway-kamu/members
+*/
+app.get("/members", async (req, res) => {
 
 	try {
 
-		const response = await axios.patch(
-			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/users/1`,
-			{
-				roleId: 731113037
-			},
+		const response = await axios.get(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=20`,
 			{
 				headers: {
-					"x-api-key": API_KEY,
-					"Content-Type": "application/json"
+					"x-api-key": API_KEY
 				}
 			}
 		);
@@ -32,6 +32,8 @@ app.get("/testrank", async (req, res) => {
 		res.json(response.data);
 
 	} catch(err) {
+
+		console.error(err.response?.data || err);
 
 		res.status(500).json(
 			err.response?.data || err.toString()
@@ -41,6 +43,41 @@ app.get("/testrank", async (req, res) => {
 
 });
 
+/*
+	TEST API KEY
+	https://domain-railway-kamu/testrank
+*/
+app.get("/testrank", async (req, res) => {
+
+	try {
+
+		const response = await axios.get(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/roles`,
+			{
+				headers: {
+					"x-api-key": API_KEY
+				}
+			}
+		);
+
+		res.json(response.data);
+
+	} catch(err) {
+
+		console.error(err.response?.data || err);
+
+		res.status(500).json(
+			err.response?.data || err.toString()
+		);
+
+	}
+
+});
+
+/*
+	NANTI DIPAKAI ROBLOX
+	BELUM FINAL
+*/
 app.post("/rank", async (req, res) => {
 
 	try {
@@ -48,31 +85,20 @@ app.post("/rank", async (req, res) => {
 		const userId = req.body.userId;
 		const roleId = req.body.roleId;
 
-		const response = await axios.patch(
-			`https://groups.roblox.com/v1/groups/${GROUP_ID}/users/${userId}`,
-			{
-				roleId: roleId
-			},
-			{
-				headers: {
-					"x-api-key": API_KEY,
-					"Content-Type": "application/json"
-				}
-			}
-		);
-
 		res.json({
 			success: true,
-			data: response.data
+			message: "Endpoint aktif",
+			userId,
+			roleId
 		});
 
 	} catch(err) {
 
-		console.error(err.response?.data || err);
+		console.error(err);
 
 		res.status(500).json({
 			success: false,
-			error: err.response?.data || err.toString()
+			error: err.toString()
 		});
 
 	}
