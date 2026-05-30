@@ -10,15 +10,22 @@ app.use(express.json());
 
 async function startBot() {
 	try {
+
+		console.log("Starting login...");
+
 		await noblox.setCookie(COOKIE);
+
+		console.log("Cookie accepted");
 
 		const currentUser = await noblox.getCurrentUser();
 
 		console.log("Logged in as:", currentUser.UserName);
-		console.log("Group ID:", GROUP_ID);
 
 	} catch (err) {
+
+		console.error("LOGIN ERROR:");
 		console.error(err);
+
 	}
 }
 
