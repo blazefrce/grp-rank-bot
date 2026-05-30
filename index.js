@@ -13,8 +13,7 @@ app.get("/", (req, res) => {
 });
 
 /*
-	TEST MEMBERS
-	https://domain-railway-kamu/members
+	List memberships
 */
 app.get("/members", async (req, res) => {
 
@@ -44,8 +43,7 @@ app.get("/members", async (req, res) => {
 });
 
 /*
-	TEST API KEY
-	https://domain-railway-kamu/testrank
+	Test API Key
 */
 app.get("/testrank", async (req, res) => {
 
@@ -75,8 +73,56 @@ app.get("/testrank", async (req, res) => {
 });
 
 /*
-	NANTI DIPAKAI ROBLOX
-	BELUM FINAL
+	Find membership by UserId
+	Example:
+	/find/11028647983
+*/
+app.get("/find/:userid", async (req, res) => {
+
+	try {
+
+		const userId = String(req.params.userid);
+
+		const response = await axios.get(
+			`https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/memberships?maxPageSize=100`,
+			{
+				headers: {
+					"x-api-key": API_KEY
+				}
+			}
+		);
+
+		const memberships = response.data.groupMemberships || [];
+
+		const member = memberships.find(m =>
+			m.user === `users/${userId}`
+		);
+
+		if (!member) {
+
+			return res.status(404).json({
+				success: false,
+				message: "Member not found"
+			});
+
+		}
+
+		res.json(member);
+
+	} catch(err) {
+
+		console.error(err.response?.data || err);
+
+		res.status(500).json(
+			err.response?.data || err.toString()
+		);
+
+	}
+
+});
+
+/*
+	Placeholder rank endpoint
 */
 app.post("/rank", async (req, res) => {
 
@@ -87,7 +133,7 @@ app.post("/rank", async (req, res) => {
 
 		res.json({
 			success: true,
-			message: "Endpoint aktif",
+			message: "Rank endpoint active",
 			userId,
 			roleId
 		});
