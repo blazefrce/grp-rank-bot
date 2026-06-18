@@ -280,6 +280,53 @@ app.post("/rank", async (req, res) => {
 
 });
 
+app.get("/allranks", async (req, res) => {
+
+    try {
+
+        let allRoles = [];
+        let nextPageToken = "";
+
+        do {
+
+            const url =
+                `https://apis.roblox.com/cloud/v2/groups/${GROUP_ID}/roles`
+                + (
+                    nextPageToken
+                        ? `?pageToken=${encodeURIComponent(nextPageToken)}`
+                        : ""
+                );
+
+            const response = await axios.get(
+                url,
+                {
+                    headers: {
+                        "x-api-key": API_KEY
+                    }
+                }
+            );
+
+            allRoles.push(...response.data.groupRoles);
+
+            nextPageToken =
+                response.data.nextPageToken || "";
+
+        } while (nextPageToken);
+
+        res.json(allRoles);
+
+    } catch (err) {
+
+        console.error(err.response?.data || err);
+
+        res.status(500).json(
+            err.response?.data || err.toString()
+        );
+
+    }
+
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
